@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Mamas &amp; Papas Pricing — Enterprise dynamic pricing analytics dashboard">
+    <title>Mamas &amp; Papas Pricing — Dashboard</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+
+    <!-- Auth guard -->
+    <script>if (!sessionStorage.getItem('access_token')) window.location.href = 'login.html';</script>
+
+    <div class="app-layout">
+
+        <!-- ── Sidebar ───────────────────────────────────────────────── -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-logo">
+                <img src="images/logo.png" alt="Mamas &amp; Papas"
+                    style="max-width:88px;border-radius:5px;background:#fff;padding:3px 6px;object-fit:contain;">
+                <div class="sidebar-logo-text" style="font-size:0.7rem;opacity:0.8;">
+                    Pricing Intelligence
+                    <small>v1.0.0 · Internal</small>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section-label">Analytics</div>
+                <div class="nav-item active" data-page="overview" id="nav-overview">
+                    <span class="nav-icon">📊</span> Executive Dashboard
+                </div>
+                <div class="nav-item" data-page="recommendations" id="nav-recommendations">
+                    <span class="nav-icon">📋</span> Price Movement
+                    <span class="nav-badge" id="rec-count">—</span>
+                </div>
+                <div class="nav-item" data-page="sku-detail" id="nav-sku">
+                    <span class="nav-icon">🔬</span> SKU Drill-Down
+                </div>
+                <div class="nav-item" data-page="simulator" id="nav-simulator">
+                    <span class="nav-icon">🎛</span> Scenario Simulator
+                </div>
+
+                <div class="nav-section-label" id="admin-section">Operations</div>
+                <div class="nav-item" data-page="upload" id="nav-upload">
+                    <span class="nav-icon">⬆</span> Upload Data
+                </div>
+                <div class="nav-item" data-page="train" id="nav-train">
+                    <span class="nav-icon">🤖</span> Train Model
+                </div>
+                <div class="nav-item" data-page="optimise" id="nav-optimise">
+                    <span class="nav-icon">⚡</span> Run Optimisation
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar" id="user-avatar">?</div>
+                    <div class="user-details">
+                        <div class="user-name" id="user-email-display">—</div>
+                        <div class="user-role" id="user-role-display">—</div>
+                    </div>
+                </div>
+                <button class="btn-logout" id="logout-btn">🔐 Sign Out</button>
+            </div>
+        </aside>
+
+        <!-- ── Main content ───────────────────────────────────────────── -->
+        <div class="main-content">
+            <header class="main-header">
+                <div>
+                    <div class="header-title" id="page-title">Executive Dashboard</div>
+                    <div class="header-subtitle" id="page-date">—</div>
+                </div>
+                <div class="header-actions">
+                    <span class="env-badge" id="env-badge">DEV</span>
+                    <button class="btn btn-ghost btn-sm" onclick="window.location.reload()">↻ Refresh</button>
+                </div>
+            </header>
+
+            <main class="page-content">
+
+                <!-- ═══════════ OVERVIEW — EXECUTIVE DASHBOARD ═══════════ -->
+                <section class="page active" id="page-overview">
+
+                    <!-- KPI Hero Row: 5 cards -->
+                    <div class="kpi-grid">
+                        <div class="kpi-card indigo">
+                            <div class="kpi-icon indigo">£</div>
+                            <div class="kpi-label">Total Projected Revenue</div>
+                            <div class="kpi-value" id="kpi-total-revenue">—</div>
+                            <div class="kpi-change" id="kpi-total-revenue-change">All optimised SKUs</div>
+                        </div>
+                        <div class="kpi-card emerald">
+                            <div class="kpi-icon emerald">📈</div>
+                            <div class="kpi-label">Total Projected Margin</div>
+                            <div class="kpi-value" id="kpi-total-margin">—</div>
+                            <div class="kpi-change" id="kpi-total-margin-change">Gross margin across portfolio</div>
+                        </div>
+                        <div class="kpi-card teal">
+                            <div class="kpi-icon teal">🚀</div>
+                            <div class="kpi-label">Revenue Uplift %</div>
+                            <div class="kpi-value" id="kpi-uplift">—</div>
+                            <div class="kpi-change" id="kpi-uplift-change">vs. current baseline prices</div>
+                        </div>
+                        <div class="kpi-card violet">
+                            <div class="kpi-icon violet">↑</div>
+                            <div class="kpi-label">SKUs — Price Increase</div>
+                            <div class="kpi-value" id="kpi-sku-up">—</div>
+                            <div class="kpi-change">
+                                <span class="dir-badge up">↑ Price Up</span>
+                            </div>
+                        </div>
+                        <div class="kpi-card amber">
+                            <div class="kpi-icon amber">↓</div>
+                            <div class="kpi-label">SKUs — Price Decrease</div>
+                            <div class="kpi-value" id="kpi-sku-down">—</div>
+                            <div class="kpi-change">
+                                <span class="dir-badge down">↓ Price Down</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts row -->
+                    <div style="display:grid;grid-template-columns:2fr 1fr;gap:1rem;margin-bottom:1rem;">
+                        <div class="panel">
+                            <div class="panel-header">
+                                <div>
+                                    <div class="panel-title">Revenue vs Margin by Category</div>
+                                    <div class="panel-subtitle">Latest optimisation run — all SKUs</div>
+                                </div>
+                            </div>
+                            <div class="panel-body">
+                                <div class="chart-container" style="height:280px">
+                                    <canvas id="overview-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel">
+                            <div class="panel-header">
+                                <div>
+                                    <div class="panel-title">Elasticity Distribution</div>
+                                    <div class="panel-subtitle">SKU classification breakdown</div>
+                                </div>
+                            </div>
+                            <div class="panel-body">
+                                <div class="chart-container" style="height:280px">
+                                    <canvas id="elasticity-donut"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System status -->
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-title">System Status</div>
+                            <div class="panel-actions">
+                                <span id="model-status-text" class="text-sm text-muted">—</span>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div id="system-status-grid"
+                                style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;">
+                            </div>
+                        </div>
+                    </div>
+
+                </section>
+
+                <!-- ═══════════ RECOMMENDATIONS — PRICE MOVEMENT TABLE ═══════════ -->
+                <section class="page" id="page-recommendations">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div>
+                                <div class="panel-title">Price Movement Table</div>
+                                <div class="panel-subtitle" id="rec-subtitle">Latest optimisation run</div>
+                            </div>
+                            <div class="panel-actions">
+                                <button class="btn btn-ghost btn-sm" id="export-btn">⬇ Export CSV</button>
+                            </div>
+                        </div>
+
+                        <!-- Filters toolbar -->
+                        <div class="table-toolbar">
+                            <input class="filter-input" id="filter-sku" placeholder="🔍 Search SKU / Product…">
+                            <input class="filter-input" id="filter-cat" placeholder="Category…">
+                            <input class="filter-input" type="date" id="filter-date" style="width:145px;">
+                            <button class="btn btn-ghost btn-sm" id="apply-filter-btn">Apply</button>
+                            <button class="btn btn-ghost btn-sm" id="clear-filter-btn">Clear</button>
+                        </div>
+
+                        <div style="overflow-x:auto;">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th data-sort="description">Product <span class="sort-icon">↕</span></th>
+                                        <th>Category</th>
+                                        <th data-sort="current_price">Current £ <span class="sort-icon">↕</span></th>
+                                        <th data-sort="recommended_price">Rec. £ <span class="sort-icon">↕</span></th>
+                                        <th data-sort="price_change_pct">Change <span class="sort-icon">↕</span></th>
+                                        <th data-sort="expected_revenue">Revenue <span class="sort-icon">↕</span></th>
+                                        <th data-sort="expected_margin">Margin <span class="sort-icon">↕</span></th>
+                                        <th>Elasticity</th>
+                                        <th>Direction</th>
+                                        <th>Confidence</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="rec-tbody">
+                                    <tr>
+                                        <td colspan="10"
+                                            style="text-align:center;padding:2.5rem;color:var(--text-muted);">
+                                            No recommendations loaded. Run optimisation first.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="table-pagination">
+                            <div class="pagination-info" id="rec-pagination-info">0 results</div>
+                            <div class="pagination-btns" id="rec-pagination-btns"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ═══════════ SKU DRILL-DOWN ═══════════ -->
+                <section class="page" id="page-sku-detail">
+                    <div class="sku-detail-header">
+                        <div>
+                            <div class="sku-detail-badge" id="detail-sku-badge">SELECT A SKU</div>
+                            <div class="text-muted text-sm" id="detail-sku-category">—</div>
+                        </div>
+                        <div style="margin-left:auto;display:flex;gap:.5rem;align-items:center;">
+                            <select id="detail-sku-select" class="form-input" style="width:300px;">
+                                <option value="">— Choose SKU —</option>
+                            </select>
+                            <button class="btn btn-ghost btn-sm" id="detail-load-btn">Load SKU</button>
+                        </div>
+                    </div>
+
+                    <div class="detail-grid" id="detail-content" style="display:none;">
+
+                        <!-- Demand vs Price Curve -->
+                        <div class="panel">
+                            <div class="panel-header">
+                                <div class="panel-title">Demand vs Price Curve</div>
+                            </div>
+                            <div class="panel-body">
+                                <div class="chart-container" style="height:260px;">
+                                    <canvas id="demand-curve-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Feature Importance -->
+                        <div class="panel">
+                            <div class="panel-header">
+                                <div class="panel-title">Feature Importance</div>
+                                <div class="panel-subtitle">Demand drivers (permutation importance)</div>
+                            </div>
+                            <div class="panel-body">
+                                <div id="feature-bars" class="feature-bars"></div>
+                            </div>
+                        </div>
+
+                        <!-- Margin Sensitivity -->
+                        <div class="panel">
+                            <div class="panel-header">
+                                <div class="panel-title">Margin Sensitivity</div>
+                                <div class="panel-subtitle">Margin across price range</div>
+                            </div>
+                            <div class="panel-body">
+                                <div class="chart-container" style="height:220px;">
+                                    <canvas id="margin-curve-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recommendation Summary -->
+                        <div class="panel">
+                            <div class="panel-header">
+                                <div class="panel-title">Recommendation Summary</div>
+                            </div>
+                            <div class="panel-body">
+                                <div id="sku-summary-grid"
+                                    style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem;">
+                                </div>
+                                <div class="narrative-box" id="sku-narrative">—</div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div id="detail-placeholder" class="panel" style="text-align:center;padding:3.5rem;margin-top:0;">
+                        <div style="font-size:2.5rem;margin-bottom:1rem;">🔬</div>
+                        <div style="font-weight:600;color:var(--text-primary);margin-bottom:.4rem;">
+                            No SKU Selected</div>
+                        <div class="text-muted text-sm">Search above to load a detailed SKU analysis</div>
+                    </div>
+                </section>
+
+                <!-- ═══════════ SIMULATOR ═══════════ -->
+                <section class="page" id="page-simulator">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-title">🎛 Scenario Simulator</div>
+                            <div class="panel-subtitle">Adjust price and see real-time impact</div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="simulator-grid">
+                                <div>
+                                    <label class="form-label">Select SKU</label>
+                                    <select id="sim-sku-select" class="form-input">
+                                        <option value="">— Choose SKU —</option>
+                                    </select>
+                                    <div style="margin-top:1.25rem;">
+                                        <label class="form-label">Price Adjustment</label>
+                                        <div class="slider-container">
+                                            <input type="range" id="price-slider" class="price-slider" min="80"
+                                                max="120" value="100" step="1">
+                                            <div class="slider-labels">
+                                                <span>-20% (Floor)</span>
+                                                <span id="slider-label"
+                                                    style="color:var(--brand-primary);font-weight:700;">Current
+                                                    (0%)</span>
+                                                <span>+20% (Cap)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="sim-metrics">
+                                        <div class="sim-metric">
+                                            <div class="sim-metric-label">Price</div>
+                                            <div class="sim-metric-value" id="sim-price">£—</div>
+                                            <div class="sim-metric-delta" id="sim-price-delta"></div>
+                                        </div>
+                                        <div class="sim-metric">
+                                            <div class="sim-metric-label">Demand</div>
+                                            <div class="sim-metric-value" id="sim-demand">—</div>
+                                            <div class="sim-metric-delta" id="sim-demand-delta"></div>
+                                        </div>
+                                        <div class="sim-metric">
+                                            <div class="sim-metric-label">Revenue</div>
+                                            <div class="sim-metric-value" id="sim-revenue">£—</div>
+                                            <div class="sim-metric-delta" id="sim-revenue-delta" class="sim-delta-up">
+                                            </div>
+                                        </div>
+                                        <div class="sim-metric">
+                                            <div class="sim-metric-label">Margin</div>
+                                            <div class="sim-metric-value" id="sim-margin">£—</div>
+                                            <div class="sim-metric-delta" id="sim-margin-delta"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="form-label">Revenue vs Price Curve</label>
+                                    <div class="chart-container" style="height:320px;">
+                                        <canvas id="sim-chart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ═══════════ UPLOAD ═══════════ -->
+                <section class="page" id="page-upload">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-title">⬆ Upload Sales Data</div>
+                            <div class="panel-subtitle">CSV with required schema fields</div>
+                        </div>
+                        <div class="panel-body">
+                            <div id="upload-alerts"></div>
+                            <div class="upload-zone" id="upload-zone">
+                                <div class="upload-icon">📁</div>
+                                <div class="upload-label">Drop CSV file here or <span>click to browse</span></div>
+                                <div class="upload-hint">Required: FiscalYear, FiscalWeekNumber, AnalystCategory,
+                                    Description, Total NB Qty, Total NB Nett Sales · Max 50 MB</div>
+                                <input type="file" id="file-input" accept=".csv" style="display:none;">
+                            </div>
+                            <div id="upload-progress" class="hidden" style="margin-top:1rem;">
+                                <div class="progress-bar-container">
+                                    <div class="progress-label"><span>Processing…</span><span
+                                            id="progress-pct">0%</span></div>
+                                    <div class="progress-track">
+                                        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="upload-result" class="hidden" style="margin-top:1rem;"></div>
+                        </div>
+                    </div>
+                    <div class="panel mt-2">
+                        <div class="panel-header">
+                            <div class="panel-title">Sample CSV Schema</div>
+                        </div>
+                        <div class="panel-body">
+                            <code
+                                style="font-size:.78rem;color:var(--text-secondary);font-family:'JetBrains Mono',monospace;display:block;background:rgba(255, 255, 255, 0.04);padding:.75rem;border-radius:var(--radius-sm);border:1px solid var(--border-subtle);">FiscalYear, FiscalWeekNumber, DayOfWeek, AnalystCategory, Group, SubGroup, Description, Home Shopping NB Qty, Home Shopping NB Nett Sales, Home Shopping NB Profit - Group, Stores NB Qty, Stores NB Nett Sales, Stores NB Profit - Group, Total NB Qty, Total NB Nett Sales, Total NB Profit - Group, Event, PromoFlag</code>
+                            <br>
+                            <button class="btn btn-ghost btn-sm" id="download-sample-btn">⬇ Download Sample
+                                CSV</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ═══════════ TRAIN ═══════════ -->
+                <section class="page" id="page-train">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-title">🤖 Train Demand Model</div>
+                            <div class="panel-subtitle">Trains LinearRegression, RandomForest, and GradientBoosting —
+                                auto-selects best by validation R²</div>
+                        </div>
+                        <div class="panel-body">
+                            <div id="train-alerts"></div>
+                            <p class="text-muted" style="font-size:.875rem;margin-bottom:1.25rem;">Ensure data has been
+                                uploaded before training. Model will be trained on all cleaned data in the system.</p>
+                            <button class="btn btn-primary" id="train-btn" style="width:auto;padding:.75rem 2rem;">
+                                <span id="train-btn-text">🚀 Start Training</span>
+                                <span id="train-spinner" class="spinner hidden"></span>
+                            </button>
+                            <div id="train-result" class="hidden" style="margin-top:1.5rem;"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ═══════════ OPTIMISE ═══════════ -->
+                <section class="page" id="page-optimise">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-title">⚡ Run Price Optimisation</div>
+                            <div class="panel-subtitle">Simulates price grid per SKU, applies RL adjustments, generates
+                                recommendations</div>
+                        </div>
+                        <div class="panel-body">
+                            <div id="opt-alerts"></div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.25rem;">
+                                <div class="form-group">
+                                    <label class="form-label">Target Date</label>
+                                    <input type="date" id="opt-date" class="form-input">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Category Filter (optional)</label>
+                                    <input type="text" id="opt-category" class="form-input"
+                                        placeholder="e.g. Pushchairs">
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" id="opt-btn" style="width:auto;padding:.75rem 2rem;">
+                                <span id="opt-btn-text">⚡ Generate Recommendations</span>
+                                <span id="opt-spinner" class="spinner hidden"></span>
+                            </button>
+                            <div id="opt-result" class="hidden" style="margin-top:1.5rem;"></div>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Captivating Particle Canvas -->
+    <canvas id="particle-canvas"
+        style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:-1;opacity:0.6;pointer-events:none;"></canvas>
+    <script>
+        const cvs = document.getElementById('particle-canvas');
+        const ctx = cvs.getContext('2d');
+        let w, h, particles = [];
+        const initCanvas = () => { w = cvs.width = window.innerWidth; h = cvs.height = window.innerHeight; };
+        window.addEventListener('resize', initCanvas);
+        initCanvas();
+        for (let i = 0; i < 85; i++) particles.push({ x: Math.random() * w, y: Math.random() * h, vx: (Math.random() - 0.5) * 0.6, vy: (Math.random() - 0.5) * 0.6, size: Math.random() * 2 + 1 });
+        function draw() {
+            ctx.clearRect(0, 0, w, h);
+            ctx.fillStyle = 'rgba(168, 85, 247, 0.5)';
+            particles.forEach(p => {
+                p.x += p.vx; p.y += p.vy;
+                if (p.x < 0 || p.x > w) p.vx *= -1;
+                if (p.y < 0 || p.y > h) p.vy *= -1;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+            });
+            requestAnimationFrame(draw);
+        }
+        draw();
+    </script>
+    <script src="js/api.js?v=3"></script>
+    <script src="js/auth.js?v=3"></script>
+    <script src="js/dashboard.js?v=3"></script>
+    <script src="js/table.js?v=4"></script>
+    <script src="js/simulator.js?v=3"></script>
+    <script src="js/sku-detail.js?v=3"></script>
+    <script src="js/app.js?v=3"></script>
+
+    <script>
+        /* ── Ripple on nav items & buttons ── */
+        function addRipple(el) {
+            el.classList.add('ripple-host');
+            el.addEventListener('click', function (e) {
+                const r = document.createElement('span');
+                r.className = 'ripple';
+                const rect = el.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                r.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX - rect.left - size / 2}px;top:${e.clientY - rect.top - size / 2}px`;
+                el.appendChild(r);
+                r.addEventListener('animationend', () => r.remove());
+            });
+        }
+        document.querySelectorAll('.nav-item,.btn,.btn-ghost,.btn-primary,.demo-cred,.page-btn').forEach(addRipple);
+    </script>
+
+</body>
+
+</html>
