@@ -18,7 +18,7 @@ aiosqlite==0.20.0
 # Data Processing
 pandas==2.2.3
 numpy==1.26.4
-scikit-learn==1.4.1
+scikit-learn==1.5.0
 
 # Environment
 python-dotenv==1.0.1
