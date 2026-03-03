@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 720
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
-    ALLOWED_HOSTS: str = "localhost,127.0.0.1"
+    ALLOWED_HOSTS: str = "localhost,127.0.0.1,*.onrender.com,mamas-and-papas-pricing.onrender.com,*"
 
     # ── Database ─────────────────────────────────────────────────────────
     DATABASE_URL: str = "sqlite:///./pricing_v2.db"
