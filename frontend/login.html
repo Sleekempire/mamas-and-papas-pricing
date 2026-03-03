@@ -50,7 +50,7 @@
   </div>
 
   <script>
-    const API = 'http://localhost:8082/api/v1';
+    const API = window.location.protocol === 'file:' ? 'http://localhost:8000/api/v1' : '/api/v1';
 
     document.querySelectorAll('.demo-cred').forEach(el => {
       el.addEventListener('click', () => {
