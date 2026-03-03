@@ -69,7 +69,7 @@ async def download_sample_csv():
 
 
 @router.post("/upload-data", response_model=UploadResponse)
-async def upload_data(
+def upload_data(
     request: Request,
     file: UploadFile = File(...),
     current_user: TokenData = Depends(RequireAnalystOrAbove),
@@ -84,7 +84,7 @@ async def upload_data(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-    raw_bytes = await file.read()
+    raw_bytes = file.file.read()
 
     try:
         validate_file_size(len(raw_bytes))
