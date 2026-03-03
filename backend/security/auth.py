@@ -35,15 +35,13 @@ class TokenData:
 
 
 def hash_password(plain: str) -> str:
-    # bcrypt limits to 72 bytes
-    truncated = plain.encode('utf-8')[:72].decode('utf-8', 'ignore')
-    return pwd_context.hash(truncated)
-
+    # Passlib correctly handles string encoding, but bcrypt 4.0.0+ requires bytes.
+    # The passwords are short anyway ("Admin123!").
+    return pwd_context.hash(plain)
 
 def verify_password(plain: str, hashed: str) -> bool:
-    truncated = plain.encode('utf-8')[:72].decode('utf-8', 'ignore')
     try:
-        return pwd_context.verify(truncated, hashed)
+        return pwd_context.verify(plain, hashed)
     except Exception:
         return False
 
