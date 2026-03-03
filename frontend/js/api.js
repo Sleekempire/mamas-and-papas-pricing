@@ -4,7 +4,7 @@
  */
 
 // Base path for all requests
-const API_BASE = 'http://localhost:8082/api/v1';
+const API_BASE = window.location.protocol === 'file:' ? 'http://localhost:8000/api/v1' : '/api/v1';
 
 // Track consecutive 401s — only force logout after 3 in a row
 let _consecutive401s = 0;

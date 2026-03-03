@@ -10,7 +10,9 @@ from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from slowapi.errors import RateLimitExceeded
+import os
 
 from config import settings
 from database.connection import init_db
@@ -115,3 +117,10 @@ app.include_router(recommendations.router, prefix="/api/v1", tags=["Recommendati
 @app.get("/health", tags=["Health"])
 async def health():
     return {"status": "ok", "version": settings.APP_VERSION, "env": settings.ENVIRONMENT}
+
+# ── Serve Frontend ────────────────────────────────────────────────────────────
+frontend_path = os.path.join(os.path.dirname(__file__), "..", "..", "frontend")
+if os.path.exists(frontend_path):
+    app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
+else:
+    logger.warning(f"Frontend directory not found at {frontend_path}. Static files will not be served.")
