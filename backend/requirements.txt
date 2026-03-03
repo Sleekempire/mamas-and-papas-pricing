@@ -16,7 +16,7 @@ alembic==1.13.1
 aiosqlite==0.20.0
 
 # Data Processing
-pandas==2.2.1
+pandas==2.2.3
 numpy==1.26.4
 scikit-learn==1.4.1
 
